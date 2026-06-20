@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import AppNav from "@/components/AppNav"
+import { API_URL } from "@/lib/api"
 
 interface Resume {
   id: number
@@ -28,13 +29,13 @@ export default function BuilderPage() {
   }, [])
 
   const fetchResumes = async (t: string) => {
-    const res = await fetch(`http://localhost:8000/resumes/?token=${t}`)
+    const res = await fetch(`${API_URL}/resumes/?token=${t}`)
     const data = await res.json()
     setResumes(data)
   }
 
   const createResume = async () => {
-    const res = await fetch(`http://localhost:8000/resumes/?token=${token}`, {
+    const res = await fetch(`${API_URL}/resumes/?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -50,7 +51,7 @@ export default function BuilderPage() {
   const deleteResume = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
     if (!confirm("Delete this resume?")) return
-    await fetch(`http://localhost:8000/resumes/${id}?token=${token}`, {
+    await fetch(`${API_URL}/resumes/${id}?token=${token}`, {
       method: "DELETE"
     })
     fetchResumes(token)

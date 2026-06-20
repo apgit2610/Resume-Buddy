@@ -3,84 +3,150 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { jwtDecode } from "jwt-decode"
-import AppNav from "@/components/AppNav"
 
 interface TokenPayload {
-  name: string
+  sub: string
   email: string
+  name: string
 }
-
-const modules = [
-  {
-    title: "Resume Builder",
-    desc: "Create ATS-friendly resumes with live preview and multiple templates.",
-    href: "/builder",
-    label: "01",
-  },
-  {
-    title: "Resume Analyzer",
-    desc: "Upload your resume and a job description to get an ATS score and keyword analysis.",
-    href: "/analyzer",
-    label: "02",
-  },
-  {
-    title: "Resume Buddy",
-    desc: "Store your career data once. Auto-generate tailored resumes for every job.",
-    href: "/buddy",
-    label: "03",
-  },
-]
 
 export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState("")
+  const [userEmail, setUserEmail] = useState("")
+  const [greeting, setGreeting] = useState("")
 
   useEffect(() => {
     const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/login")
-      return
-    }
+    if (!token) { router.push("/login"); return }
     const decoded = jwtDecode<TokenPayload>(token)
     setUserName(decoded.name)
+    setUserEmail(decoded.email)
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting("Good morning")
+    else if (hour < 17) setGreeting("Good afternoon")
+    else setGreeting("Good evening")
   }, [])
 
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    router.push("/login")
+  }
+
   return (
-    <div className="min-h-screen bg-[#fafaf7]">
-      <AppNav />
+    <div className="min-h-screen bg-[#fafafa]">
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        <div className="mb-10">
-          <p className="text-xs font-mono uppercase tracking-widest text-[#6e7682] mb-2">Welcome back</p>
-          <h2
-            className="text-3xl font-bold text-[#16191d]"
-            style={{ fontFamily: "var(--font-display)" }}
+      {/* Navbar */}
+      <nav className="bg-white border-b px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">R</span>
+          </div>
+          <span className="text-lg font-bold text-gray-900">ResumeX</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500 hidden sm:block">{userEmail}</span>
+          <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold">
+            {userName?.charAt(0)?.toUpperCase()}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
           >
-            {userName} 👋
-          </h2>
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      <main className="max-w-5xl mx-auto px-8 py-12">
+
+        {/* Hero greeting */}
+        <div className="mb-12">
+          <p className="text-sm text-gray-400 mb-1 uppercase tracking-widest">{greeting}</p>
+          <h1 className="text-4xl font-bold text-gray-900">{userName?.split(" ")[0]},</h1>
+          <p className="text-xl text-gray-400 mt-1">what are we building today?</p>
         </div>
 
-        <div className="text-xs font-mono uppercase tracking-widest text-[#6e7682] mb-4">Modules</div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {modules.map((m) => (
-            <div
-              key={m.href}
-              onClick={() => router.push(m.href)}
-              className="bg-white border border-[#e3e1da] rounded-2xl p-6 hover:shadow-md cursor-pointer transition-all hover:border-[#6e7682] group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-[#d7fb3d] flex items-center justify-center text-xs font-mono font-bold text-[#16191d] mb-4">
-                {m.label}
+        {/* Main 3 cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+
+          {/* Resume Builder */}
+          <div
+            onClick={() => router.push("/builder")}
+            className="group relative bg-white border border-gray-200 rounded-2xl p-7 cursor-pointer hover:border-gray-900 hover:shadow-lg transition-all duration-200 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full opacity-60 group-hover:opacity-100 transition-opacity" />
+            <div className="relative">
+              <div className="text-3xl mb-5">📄</div>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Resume Builder</h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                Build ATS-friendly resumes with live preview, multiple templates, and PDF export.
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 bg-gray-50 border rounded-full px-3 py-1">3 templates</span>
+                <span className="text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all text-lg">→</span>
               </div>
-              <h3
-                className="font-bold text-[#16191d] mb-2"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                {m.title}
-              </h3>
-              <p className="text-sm text-[#6e7682] leading-relaxed">{m.desc}</p>
             </div>
-          ))}
+          </div>
+
+          {/* Resume Analyzer */}
+          <div
+            onClick={() => router.push("/analyzer")}
+            className="group relative bg-white border border-gray-200 rounded-2xl p-7 cursor-pointer hover:border-gray-900 hover:shadow-lg transition-all duration-200 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full opacity-60 group-hover:opacity-100 transition-opacity" />
+            <div className="relative">
+              <div className="text-3xl mb-5">🔍</div>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Resume Analyzer</h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                Get your ATS score, find keyword gaps, and see exactly what's missing for any role.
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 bg-gray-50 border rounded-full px-3 py-1">Upload PDF · DOCX</span>
+                <span className="text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all text-lg">→</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Resume Buddy */}
+          <div
+            onClick={() => router.push("/buddy")}
+            className="group relative bg-gray-900 border border-gray-900 rounded-2xl p-7 cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-bl-full" />
+            <div className="relative">
+              <div className="text-3xl mb-5">⚡</div>
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-lg font-bold text-white">Resume Buddy</h2>
+                <span className="text-xs bg-white text-gray-900 font-semibold rounded-full px-2 py-0.5">NEW</span>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                Store your career data once. Paste any job description and get a tailored resume in seconds.
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded-full px-3 py-1">Hybrid RAG · AI</span>
+                <span className="text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all text-lg">→</span>
+              </div>
+            </div>
+          </div>
+
         </div>
+
+        {/* Bottom strip — generate shortcut */}
+        <div
+          onClick={() => router.push("/buddy/generate")}
+          className="group bg-white border border-gray-200 rounded-2xl px-7 py-5 flex items-center justify-between cursor-pointer hover:border-gray-900 hover:shadow-md transition-all duration-200"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white text-lg">⚡</div>
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">Generate a resume now</p>
+              <p className="text-xs text-gray-400 mt-0.5">Paste a job description → get a tailored resume instantly</p>
+            </div>
+          </div>
+          <span className="text-gray-300 group-hover:text-gray-900 group-hover:translate-x-1 transition-all text-xl">→</span>
+        </div>
+
       </main>
     </div>
   )

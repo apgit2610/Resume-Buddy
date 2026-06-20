@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { jwtDecode } from "jwt-decode"
 import { useEffect, useState } from "react"
+import { signOut } from "next-auth/react"
 
 interface TokenPayload {
   name: string
@@ -18,7 +19,6 @@ const navItems = [
 ]
 
 export default function AppNav() {
-  const router = useRouter()
   const pathname = usePathname()
   const [userName, setUserName] = useState("")
 
@@ -31,7 +31,10 @@ export default function AppNav() {
 
   const handleLogout = () => {
     localStorage.removeItem("token")
-    router.push("/login")
+    sessionStorage.clear()
+    document.cookie = "next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    window.location.href = "http://localhost:3000"
   }
 
   return (
@@ -50,11 +53,10 @@ export default function AppNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-[#16191d] text-white"
-                    : "text-[#6e7682] hover:text-[#16191d] hover:bg-[#f1f0eb]"
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                  ? "bg-[#16191d] text-white"
+                  : "text-[#6e7682] hover:text-[#16191d] hover:bg-[#f1f0eb]"
+                  }`}
               >
                 {item.label}
               </Link>

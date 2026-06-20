@@ -7,6 +7,7 @@ import ResumePreview from "@/components/ResumePreview"
 import AppNav from "@/components/AppNav"
 import { useReactToPrint } from "react-to-print"
 import { RESUME_TEMPLATES } from "@/components/resume-templates"
+import { API_URL } from "@/lib/api"
 import {
   DndContext,
   closestCenter,
@@ -143,7 +144,7 @@ export default function ResumeEditorPage() {
   }, [])
 
   const fetchResume = async (t: string) => {
-    const res = await fetch(`http://localhost:8000/resumes/${params.id}?token=${t}`)
+    const res = await fetch(`${API_URL}/resumes/${params.id}?token=${t}`)
     const data = await res.json()
     setTitle(data.title)
     setTemplate(data.template || "classic")
@@ -173,7 +174,7 @@ export default function ResumeEditorPage() {
   }
 
   const saveResume = async () => {
-    await fetch(`http://localhost:8000/resumes/${params.id}?token=${token}`, {
+    await fetch(`${API_URL}/resumes/${params.id}?token=${token}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, template, content: { ...content, sectionOrder } })

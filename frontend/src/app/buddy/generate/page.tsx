@@ -6,6 +6,7 @@ import { useReactToPrint } from "react-to-print"
 import ResumePreview from "@/components/ResumePreview"
 import AppNav from "@/components/AppNav"
 import { RESUME_TEMPLATES } from "@/components/resume-templates"
+import { API_URL } from "@/lib/api"
 
 export default function BuddyGeneratePage() {
   const router = useRouter()
@@ -20,6 +21,11 @@ export default function BuddyGeneratePage() {
   const [inputMode, setInputMode] = useState<"paste" | "upload">("paste")
   const [fileName, setFileName] = useState("")
   const [extracting, setExtracting] = useState(false)
+
+  // --- Project swap state ---
+  const [allRankedProjects, setAllRankedProjects] = useState<any[]>([])
+  const [selectedProjectIds, setSelectedProjectIds] = useState<number[]>([])
+  const [swapSlotIndex, setSwapSlotIndex] = useState<number | null>(null)
 
   const previewRef = useRef<HTMLDivElement>(null)
 
@@ -36,7 +42,7 @@ export default function BuddyGeneratePage() {
   }, [])
 
   const fetchStatus = async (t: string) => {
-    const res = await fetch(`http://localhost:8000/buddy/status?token=${t}`)
+    const res = await fetch(`${API_URL}/buddy/status?token=${t}`)
     const data = await res.json()
     setStatus(data)
   }
@@ -51,7 +57,7 @@ export default function BuddyGeneratePage() {
     try {
       const formData = new FormData()
       formData.append("file", file)
-      const res = await fetch(`http://localhost:8000/buddy/extract-jd?token=${token}`, {
+      const res = await fetch(`${API_URL}/buddy/extract-jd?token=${token}`, {
         method: "POST",
         body: formData
       })
@@ -68,19 +74,64 @@ export default function BuddyGeneratePage() {
     if (!jd.trim()) { setError("Please paste or upload a job description"); return }
     setError("")
     setLoading(true)
+    setSwapSlotIndex(null)
     try {
-      const res = await fetch(`http://localhost:8000/buddy/generate?token=${token}`, {
+      const res = await fetch(`${API_URL}/buddy/generate?token=${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ job_description: jd, template })
       })
       const data = await res.json()
-      if (data.detail) setError(data.detail)
-      else { setResumeContent(data.resume_content); setRankingInfo(data.ranking_info) }
+      if (data.detail) {
+        setError(data.detail)
+      } else {
+        setResumeContent(data.resume_content)
+        setRankingInfo(data.ranking_info)
+        const ranked = data.all_ranked_projects || []
+        setAllRankedProjects(ranked)
+        setSelectedProjectIds(ranked.slice(0, 3).map((p: any) => p.id))
+      }
     } catch {
       setError("Something went wrong. Please try again.")
     }
     setLoading(false)
+  }
+
+  // Rebuild resumeContent.projects whenever selectedProjectIds changes
+  const projectToResumeFormat = (p: any) => ({
+    title: p.title,
+    description: p.description || "",
+    technologies: p.technologies || "",
+    link: ""
+  })
+
+  const swapProject = (slotIndex: number, newProjectId: number) => {
+    setSelectedProjectIds(prev => {
+      const updated = [...prev]
+      updated[slotIndex] = newProjectId
+      return updated
+    })
+    setSwapSlotIndex(null)
+  }
+
+  useEffect(() => {
+    if (!resumeContent || allRankedProjects.length === 0) return
+    const selectedProjects = selectedProjectIds
+      .map(id => allRankedProjects.find(p => p.id === id))
+      .filter(Boolean)
+      .map(projectToResumeFormat)
+
+    setResumeContent((prev: any) => ({
+      ...prev,
+      projects: selectedProjects
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectIds])
+
+  const availableForSlot = (slotIndex: number) => {
+    // Projects not currently selected in OTHER slots
+    const otherSelected = selectedProjectIds.filter((_, i) => i !== slotIndex)
+    return allRankedProjects.filter(p => !otherSelected.includes(p.id))
   }
 
   return (
@@ -129,7 +180,7 @@ export default function BuddyGeneratePage() {
 
         <div className={`grid gap-6 ${resumeContent ? "grid-cols-2" : "grid-cols-1 max-w-2xl"}`}>
 
-          {/* Left: Input */}
+          {/* Left: Input + Project Selection */}
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -201,6 +252,60 @@ export default function BuddyGeneratePage() {
                 <p>🏆 Certifications: {rankingInfo.certifications_selected}</p>
                 <p>⭐ Achievements: {rankingInfo.achievements_selected}</p>
                 <p>🛠 Skills: {rankingInfo.skills_selected}</p>
+              </div>
+            )}
+
+            {/* --- Project Selection Panel --- */}
+            {allRankedProjects.length > 0 && (
+              <div className="bg-white border border-[#e3e1da] rounded-xl p-4">
+                <p className="font-semibold text-[#16191d] text-sm mb-3">Projects in Resume</p>
+                <div className="space-y-2">
+                  {selectedProjectIds.map((pid, slotIndex) => {
+                    const project = allRankedProjects.find(p => p.id === pid)
+                    if (!project) return null
+                    return (
+                      <div key={slotIndex} className="border border-[#e3e1da] rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[#16191d] truncate">{project.title}</p>
+                            <p className="text-xs text-[#6e7682] truncate">{project.technologies}</p>
+                          </div>
+                          <button
+                            onClick={() => setSwapSlotIndex(swapSlotIndex === slotIndex ? null : slotIndex)}
+                            className="text-xs border border-[#e3e1da] px-2 py-1 rounded-lg hover:border-[#6e7682] text-[#6e7682] transition-colors flex-shrink-0 ml-2"
+                          >
+                            {swapSlotIndex === slotIndex ? "Cancel" : "⇄ Change"}
+                          </button>
+                        </div>
+
+                        {/* Swap picker */}
+                        {swapSlotIndex === slotIndex && (
+                          <div className="mt-3 pt-3 border-t border-[#e3e1da] space-y-1.5">
+                            <p className="text-xs text-[#6e7682] mb-2">Choose a replacement:</p>
+                            {availableForSlot(slotIndex).map((alt) => (
+                              <button
+                                key={alt.id}
+                                onClick={() => swapProject(slotIndex, alt.id)}
+                                disabled={alt.id === pid}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${alt.id === pid
+                                  ? "bg-[#f1f0eb] text-[#16191d] font-medium cursor-default"
+                                  : "hover:bg-[#f1f0eb] text-[#6e7682]"
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="truncate">{alt.title}</span>
+                                  <span className="text-[10px] text-[#6e7682] ml-2 flex-shrink-0">
+                                    score {alt.score}
+                                  </span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>

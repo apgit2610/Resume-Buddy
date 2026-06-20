@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import AppNav from "@/components/AppNav"
+import { API_URL } from "@/lib/api"
 
 export default function BuddyPage() {
   const router = useRouter()
@@ -56,11 +57,10 @@ export default function BuddyPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeTab === tab.id
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab.id
                   ? "bg-white text-[#16191d] shadow-sm"
                   : "text-[#6e7682] hover:text-[#16191d]"
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -96,7 +96,7 @@ function PersonalTab({ token }: { token: string }) {
 
   useEffect(() => {
     if (!token) return
-    fetch(`http://localhost:8000/kb/personal?token=${token}`)
+    fetch(`${API_URL}/kb/personal?token=${token}`)
       .then(r => r.json())
       .then(data => {
         if (data) setForm({
@@ -112,7 +112,7 @@ function PersonalTab({ token }: { token: string }) {
   }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/personal?token=${token}`, {
+    await fetch(`${API_URL}/kb/personal?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -168,7 +168,7 @@ function EducationTab({ token }: { token: string }) {
   const [adding, setAdding] = useState(false)
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/education?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/education?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -176,7 +176,7 @@ function EducationTab({ token }: { token: string }) {
   useEffect(() => { if (token) fetchList() }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/education?token=${token}`, {
+    await fetch(`${API_URL}/kb/education?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -187,7 +187,7 @@ function EducationTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/education/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/education/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 
@@ -248,7 +248,7 @@ function ProjectsTab({ token }: { token: string }) {
   const [adding, setAdding] = useState(false)
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/projects?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/projects?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -256,7 +256,7 @@ function ProjectsTab({ token }: { token: string }) {
   useEffect(() => { if (token) fetchList() }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/projects?token=${token}`, {
+    await fetch(`${API_URL}/kb/projects?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -267,7 +267,7 @@ function ProjectsTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/projects/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/projects/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 
@@ -336,7 +336,7 @@ function ExperienceTab({ token }: { token: string }) {
   const [adding, setAdding] = useState(false)
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/experience?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/experience?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -344,7 +344,7 @@ function ExperienceTab({ token }: { token: string }) {
   useEffect(() => { if (token) fetchList() }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/experience?token=${token}`, {
+    await fetch(`${API_URL}/kb/experience?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -355,7 +355,7 @@ function ExperienceTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/experience/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/experience/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 
@@ -426,7 +426,7 @@ function SkillsTab({ token }: { token: string }) {
   ]
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/skills?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/skills?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -436,7 +436,7 @@ function SkillsTab({ token }: { token: string }) {
   const addSkill = async (category: string) => {
     const name = inputs[category].trim()
     if (!name) return
-    await fetch(`http://localhost:8000/kb/skills?token=${token}`, {
+    await fetch(`${API_URL}/kb/skills?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ category, name })
@@ -446,7 +446,7 @@ function SkillsTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/skills/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/skills/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 
@@ -495,7 +495,7 @@ function CertificationsTab({ token }: { token: string }) {
   const [adding, setAdding] = useState(false)
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/certifications?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/certifications?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -503,7 +503,7 @@ function CertificationsTab({ token }: { token: string }) {
   useEffect(() => { if (token) fetchList() }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/certifications?token=${token}`, {
+    await fetch(`${API_URL}/kb/certifications?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -514,7 +514,7 @@ function CertificationsTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/certifications/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/certifications/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 
@@ -571,7 +571,7 @@ function AchievementsTab({ token }: { token: string }) {
   const [adding, setAdding] = useState(false)
 
   const fetchList = async () => {
-    const res = await fetch(`http://localhost:8000/kb/achievements?token=${token}`)
+    const res = await fetch(`${API_URL}/kb/achievements?token=${token}`)
     const data = await res.json()
     setList(data || [])
   }
@@ -579,7 +579,7 @@ function AchievementsTab({ token }: { token: string }) {
   useEffect(() => { if (token) fetchList() }, [token])
 
   const save = async () => {
-    await fetch(`http://localhost:8000/kb/achievements?token=${token}`, {
+    await fetch(`${API_URL}/kb/achievements?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -590,7 +590,7 @@ function AchievementsTab({ token }: { token: string }) {
   }
 
   const remove = async (id: number) => {
-    await fetch(`http://localhost:8000/kb/achievements/${id}?token=${token}`, { method: "DELETE" })
+    await fetch(`${API_URL}/kb/achievements/${id}?token=${token}`, { method: "DELETE" })
     fetchList()
   }
 

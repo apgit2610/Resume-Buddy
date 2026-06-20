@@ -45,21 +45,15 @@ function ScannerAnimation() {
 
   return (
     <div className="relative bg-white border border-[#e3e1da] rounded-2xl shadow-xl p-6 w-full max-w-sm">
-
-      {/* ATS Score badge */}
       <div className="absolute -top-4 -right-4 bg-[#16191d] text-white rounded-xl px-4 py-2 flex items-center gap-2 shadow-lg">
         <span className="font-mono text-xs text-[#6e7682] uppercase tracking-wider">ATS_SCORE</span>
         <span className="font-bold text-[#d7fb3d] text-lg">{score}%</span>
       </div>
-
-      {/* Mock resume header */}
       <div className="mb-4 pb-3 border-b border-[#e3e1da]">
         <div className="h-4 w-32 bg-[#16191d] rounded mb-2" />
         <div className="h-2.5 w-48 bg-[#e3e1da] rounded mb-1" />
         <div className="h-2.5 w-40 bg-[#e3e1da] rounded" />
       </div>
-
-      {/* Skills section */}
       <div className="mb-3">
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#6e7682] mb-2">Skills</div>
         <div className="flex flex-wrap gap-2">
@@ -81,15 +75,11 @@ function ScannerAnimation() {
           ))}
         </div>
       </div>
-
-      {/* Mock content lines */}
       <div className="space-y-1.5 mt-4">
         {[80, 60, 72, 50, 65].map((w, i) => (
           <div key={i} className="h-2 bg-[#f1f0eb] rounded" style={{ width: `${w}%` }} />
         ))}
       </div>
-
-      {/* Legend */}
       <div className="flex gap-4 mt-4 pt-3 border-t border-[#e3e1da]">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded bg-[#d7fb3d]" />
@@ -114,16 +104,10 @@ export default function HomePage() {
           ResumeX
         </span>
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-sm text-[#6e7682] hover:text-[#16191d] transition-colors px-3 py-1.5"
-          >
+          <Link href="/login" className="text-sm text-[#6e7682] hover:text-[#16191d] transition-colors px-3 py-1.5">
             Login
           </Link>
-          <Link
-            href="/register"
-            className="text-sm bg-[#16191d] text-white px-4 py-2 rounded-lg hover:bg-[#2a2d32] transition-colors font-medium"
-          >
+          <Link href="/login" className="text-sm bg-[#16191d] text-white px-4 py-2 rounded-lg hover:bg-[#2a2d32] transition-colors font-medium">
             Get Started
           </Link>
         </div>
@@ -131,42 +115,28 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 py-20 flex flex-col md:flex-row items-center gap-16">
-
-        {/* Left */}
         <div className="flex-1">
           <div className="inline-flex items-center gap-2 bg-[#d7fb3d]/20 border border-[#d7fb3d]/40 rounded-full px-3 py-1 mb-6">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#16191d]">ATS-Optimized</span>
           </div>
-          <h1
-            className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-[#16191d]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-[#16191d]" style={{ fontFamily: "var(--font-display)" }}>
             Stop rewriting your resume for every job.
           </h1>
           <p className="text-lg text-[#6e7682] mb-8 leading-relaxed max-w-lg">
             Store your projects and skills once — ResumeX builds, scores, and tailors a resume for each job description automatically.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <Link
-              href="/register"
-              className="bg-[#16191d] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#2a2d32] transition-colors"
-            >
+            <Link href="/login" className="bg-[#16191d] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#2a2d32] transition-colors">
               Get Started Free
             </Link>
-            <Link
-              href="/login"
-              className="border border-[#e3e1da] text-[#16191d] px-6 py-3 rounded-xl font-medium hover:border-[#6e7682] transition-colors"
-            >
+            <Link href="/login" className="border border-[#e3e1da] text-[#16191d] px-6 py-3 rounded-xl font-medium hover:border-[#6e7682] transition-colors">
               Login
             </Link>
           </div>
         </div>
-
-        {/* Right: Scanner animation */}
         <div className="flex-1 flex justify-center">
           <ScannerAnimation />
         </div>
-
       </section>
 
       {/* Modules */}
@@ -174,41 +144,15 @@ export default function HomePage() {
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#6e7682] mb-8">What you get</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            {
-              label: "01",
-              title: "Resume Builder",
-              desc: "Create ATS-friendly resumes using professional templates with a live side-by-side preview.",
-              accent: "#d7fb3d",
-            },
-            {
-              label: "02",
-              title: "Resume Analyzer",
-              desc: "Upload your resume and a job description. Get an ATS score, matched keywords, and improvement tips.",
-              accent: "#d7fb3d",
-            },
-            {
-              label: "03",
-              title: "Resume Buddy",
-              desc: "Store your career data once. Paste any job description and get a tailored resume assembled automatically.",
-              accent: "#d7fb3d",
-            },
+            { label: "01", title: "Resume Builder", desc: "Create ATS-friendly resumes using professional templates with a live side-by-side preview." },
+            { label: "02", title: "Resume Analyzer", desc: "Upload your resume and a job description. Get an ATS score, matched keywords, and improvement tips." },
+            { label: "03", title: "Resume Buddy", desc: "Store your career data once. Paste any job description and get a tailored resume assembled automatically." },
           ].map((m) => (
-            <div
-              key={m.label}
-              className="bg-white border border-[#e3e1da] rounded-2xl p-6 hover:shadow-md transition-shadow"
-            >
-              <div
-                className="text-xs font-mono font-bold mb-4 w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: m.accent, color: "#16191d" }}
-              >
+            <div key={m.label} className="bg-white border border-[#e3e1da] rounded-2xl p-6 hover:shadow-md transition-shadow">
+              <div className="text-xs font-mono font-bold mb-4 w-8 h-8 rounded-lg flex items-center justify-center bg-[#d7fb3d] text-[#16191d]">
                 {m.label}
               </div>
-              <h3
-                className="text-lg font-bold mb-2 text-[#16191d]"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                {m.title}
-              </h3>
+              <h3 className="text-lg font-bold mb-2 text-[#16191d]" style={{ fontFamily: "var(--font-display)" }}>{m.title}</h3>
               <p className="text-sm text-[#6e7682] leading-relaxed">{m.desc}</p>
             </div>
           ))}
@@ -220,33 +164,14 @@ export default function HomePage() {
         <div className="text-[10px] font-mono uppercase tracking-widest text-[#6e7682] mb-8">How it works</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            {
-              step: "1",
-              title: "Build your knowledge base",
-              desc: "Add your projects, skills, experience, and certifications once. ResumeX stores everything permanently.",
-            },
-            {
-              step: "2",
-              title: "Paste a job description",
-              desc: "Drop in any job posting. ResumeX extracts the required skills, keywords, and domain information.",
-            },
-            {
-              step: "3",
-              title: "Get a tailored resume",
-              desc: "ResumeX ranks your stored content by relevance and assembles the perfect resume automatically.",
-            },
+            { step: "1", title: "Build your knowledge base", desc: "Add your projects, skills, experience, and certifications once. ResumeX stores everything permanently." },
+            { step: "2", title: "Paste a job description", desc: "Drop in any job posting. ResumeX extracts the required skills, keywords, and domain information." },
+            { step: "3", title: "Get a tailored resume", desc: "ResumeX ranks your stored content by relevance and assembles the perfect resume automatically." },
           ].map((s, i) => (
             <div key={i} className="flex gap-4">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-[#16191d] text-white flex items-center justify-center text-sm font-bold">
-                {s.step}
-              </div>
+              <div className="shrink-0 w-8 h-8 rounded-full bg-[#16191d] text-white flex items-center justify-center text-sm font-bold">{s.step}</div>
               <div>
-                <h3
-                  className="font-bold text-[#16191d] mb-1"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {s.title}
-                </h3>
+                <h3 className="font-bold text-[#16191d] mb-1" style={{ fontFamily: "var(--font-display)" }}>{s.title}</h3>
                 <p className="text-sm text-[#6e7682] leading-relaxed">{s.desc}</p>
               </div>
             </div>
@@ -257,19 +182,13 @@ export default function HomePage() {
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 py-16 border-t border-[#e3e1da]">
         <div className="bg-[#16191d] rounded-2xl px-8 py-12 text-center">
-          <h2
-            className="text-3xl font-bold text-white mb-4"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h2 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
             Ready to land your next job?
           </h2>
           <p className="text-[#6e7682] mb-8 max-w-md mx-auto">
             Join thousands of candidates who use ResumeX to get past the ATS and into the interview room.
           </p>
-          <Link
-            href="/register"
-            className="inline-block bg-[#d7fb3d] text-[#16191d] px-8 py-3 rounded-xl font-bold hover:bg-[#c8f020] transition-colors"
-          >
+          <Link href="/login" className="inline-block bg-[#d7fb3d] text-[#16191d] px-8 py-3 rounded-xl font-bold hover:bg-[#c8f020] transition-colors">
             Get Started Free
           </Link>
         </div>
@@ -277,9 +196,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[#e3e1da] px-6 py-8 max-w-6xl mx-auto flex items-center justify-between">
-        <span className="font-bold text-[#16191d]" style={{ fontFamily: "var(--font-display)" }}>
-          ResumeX
-        </span>
+        <span className="font-bold text-[#16191d]" style={{ fontFamily: "var(--font-display)" }}>ResumeX</span>
         <p className="text-sm text-[#6e7682]">Built for the ATS era.</p>
       </footer>
 
