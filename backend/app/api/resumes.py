@@ -8,7 +8,7 @@ from jose import jwt
 
 router = APIRouter()
 
-from app.config import SECRET_KEY
+from app.config import SECRET_KEY, ALGORITHM
 
 def get_current_user_id(token: str) -> int:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
