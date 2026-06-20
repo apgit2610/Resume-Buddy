@@ -13,7 +13,7 @@ import requests
 
 router = APIRouter()
 
-from app.config import SECRET_KEY
+from app.config import SECRET_KEY, ALGORITHM
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(
