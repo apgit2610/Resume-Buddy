@@ -11,8 +11,7 @@ from jose import jwt
 
 router = APIRouter()
 
-SECRET_KEY = "resumex-secret-key"
-ALGORITHM = "HS256"
+from app.config import SECRET_KEY
 
 def get_user_id(token: str) -> int:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

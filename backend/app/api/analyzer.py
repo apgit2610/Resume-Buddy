@@ -5,60 +5,89 @@ import io
 
 router = APIRouter()
 
-class AnalyzeRequest(BaseModel):
-    resume_text: str
-    job_description: str
+# ─── Tech skill extraction ────────────────────────────────────────────────────
 
-# ─── Known multi-word skills ──────────────────────────────────────────────────
-KNOWN_SKILLS = {
+# Common tech skills, languages, frameworks, tools
+TECH_SKILLS = {
+    # Languages
+    "python", "java", "javascript", "typescript", "c++", "c#", "go", "rust",
+    "kotlin", "swift", "scala", "r", "matlab", "bash", "shell", "php", "ruby",
+    "dart", "elixir", "haskell", "lua", "perl",
+
+    # ML / AI
+    "tensorflow", "pytorch", "keras", "scikit-learn", "sklearn", "xgboost",
+    "lightgbm", "catboost", "hugging face", "transformers", "langchain",
+    "openai", "llm", "nlp", "cv", "bert", "gpt", "stable diffusion",
+    "pandas", "numpy", "scipy", "matplotlib", "seaborn", "plotly",
+    "jupyter", "colab", "wandb", "mlflow", "ray", "dask",
+
+    # Web frameworks
+    "react", "nextjs", "next.js", "vuejs", "vue.js", "angular", "svelte",
+    "fastapi", "django", "flask", "express", "nestjs", "nest.js", "spring",
+    "laravel", "rails", "asp.net", "fastify",
+
+    # Databases
+    "postgresql", "mysql", "sqlite", "mongodb", "redis", "elasticsearch",
+    "cassandra", "dynamodb", "neo4j", "firebase", "supabase", "pinecone",
+    "qdrant", "weaviate", "chroma", "pgvector",
+
+    # Cloud / DevOps
+    "aws", "gcp", "azure", "docker", "kubernetes", "terraform", "ansible",
+    "jenkins", "github actions", "circleci", "gitlab ci", "helm", "airflow",
+    "kafka", "rabbitmq", "celery", "nginx", "linux",
+
+    # Tools
+    "git", "github", "gitlab", "bitbucket", "jira", "confluence", "figma",
+    "postman", "graphql", "rest", "grpc", "websocket",
+
+    # Concepts
     "machine learning", "deep learning", "natural language processing",
-    "computer vision", "neural networks", "large language models",
-    "reinforcement learning", "transfer learning", "feature engineering",
-    "data science", "data engineering", "data analysis", "data pipeline",
-    "big data", "data visualization", "business intelligence",
-    "software engineering", "software development", "full stack",
-    "front end", "back end", "web development", "mobile development",
-    "system design", "distributed systems", "microservices",
-    "rest api", "graphql", "grpc", "api design",
-    "react native", "node js", "next js", "vue js", "angular",
-    "spring boot", "django rest framework", "fast api",
-    "continuous integration", "continuous deployment", "ci cd",
-    "test driven development", "agile development", "scrum",
-    "cloud computing", "cloud platforms", "cloud infrastructure",
-    "amazon web services", "google cloud platform", "microsoft azure",
-    "mlops", "devops", "site reliability", "platform engineering",
-    "version control", "code review", "pair programming",
-    "sql databases", "nosql databases", "relational databases",
-    "object oriented programming", "functional programming",
-    "cross functional", "cross functional teams", "product management",
+    "computer vision", "reinforcement learning", "transfer learning",
+    "data engineering", "data science", "mlops", "devops", "ci/cd",
+    "microservices", "system design", "distributed systems",
+    "agile", "scrum", "tdd", "api design", "rag", "vector search",
 }
 
 STOPWORDS = {
     "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
     "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
     "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "shall", "can", "we", "you", "he", "she",
-    "they", "it", "i", "my", "your", "our", "their", "this", "that",
-    "these", "those", "what", "which", "who", "how", "when", "where",
-    "why", "all", "any", "both", "each", "few", "more", "most", "other",
-    "some", "such", "no", "not", "only", "same", "so", "than", "too",
-    "very", "just", "as", "if", "about", "above", "after", "before",
-    "between", "into", "through", "during", "also", "while", "although",
-    "because", "since", "unless", "must", "able", "good", "also", "well",
-    "used", "use", "using", "work", "working", "works", "ensure", "ensure",
-    "including", "include", "includes", "required", "require", "requires",
-    "ideal", "candidate", "position", "role", "team", "company", "join",
-    "looking", "seeking", "responsible", "responsibilities",
+    "should", "may", "might", "we", "you", "he", "she", "they", "it", "i",
+    "my", "your", "our", "their", "this", "that", "these", "those",
+    "all", "any", "both", "each", "more", "most", "other", "some", "no",
+    "not", "only", "same", "so", "than", "too", "very", "just", "as", "if",
+    "also", "well", "can", "must", "able", "good", "used", "use", "using",
+    "work", "working", "ensure", "including", "required", "ideal",
+    "candidate", "position", "role", "team", "company", "join", "looking",
+    "seeking", "responsible", "responsibilities", "experience", "knowledge",
+    "strong", "excellent", "proficient", "familiarity", "understanding",
+    "ability", "skills", "skill", "plus", "preferred", "bonus",
 }
 
-REQUIRED_SECTIONS = [
-    ("experience", ["experience", "work history", "employment", "professional experience"]),
-    ("education", ["education", "academic", "degree", "university", "college"]),
-    ("skills", ["skills", "technical skills", "technologies", "competencies"]),
-    ("projects", ["projects", "project", "portfolio", "work samples"]),
-    ("contact", ["email", "phone", "linkedin", "github", "@"]),
-    ("summary", ["summary", "objective", "profile", "about me", "overview"]),
-]
+# Generic JD/corporate-speak that isn't meaningful to match against a resume.
+FILLER_WORDS = {
+    "innovative", "passionate", "dynamic", "growing", "growth",
+    "environment", "opportunity", "opportunities", "collaborative",
+    "collaboration", "culture", "mission", "vision", "values",
+    "diverse", "diversity", "inclusive", "inclusion", "equity",
+    "benefits", "compensation", "salary", "competitive", "package",
+    "remote", "hybrid", "onsite", "office", "flexible", "flexibility",
+    "global", "world", "industry", "leading", "leader", "client",
+    "clients", "customer", "customers", "stakeholders", "thrive",
+    "thriving", "exciting", "impactful", "impact", "drive", "driven",
+    "motivated", "communication", "interpersonal", "organization",
+    "organizational", "mindset", "attitude", "year", "years", "month",
+    "months", "level", "levels", "type", "types", "kind", "kinds",
+    "various", "multiple", "wide", "range", "variety", "different",
+    "current", "future", "term", "full", "part", "based", "across",
+    "within", "into", "onto", "upon", "through", "throughout", "during",
+    "while", "such", "regarding", "related", "relevant", "appropriate",
+    "applicable", "potential", "possible", "additional", "overall",
+    "general", "specific", "particular", "certain", "highly", "extremely",
+    "deeply", "truly", "really", "currently", "previously", "recently",
+    "please", "apply", "submit", "send", "contact", "email", "address",
+    "great", "amazing", "fun", "love", "loves", "enjoy", "enjoys",
+}
 
 STRONG_ACTION_VERBS = {
     "achieved", "built", "created", "delivered", "designed", "developed",
@@ -76,34 +105,97 @@ WEAK_PHRASES = [
     "tasked with",
 ]
 
+REQUIRED_SECTIONS = [
+    ("experience", ["experience", "work history", "employment"]),
+    ("education", ["education", "academic", "degree", "university"]),
+    ("skills", ["skills", "technical skills", "technologies"]),
+    ("projects", ["projects", "project", "portfolio"]),
+    ("contact", ["email", "phone", "linkedin", "@"]),
+    ("summary", ["summary", "objective", "profile", "about"]),
+]
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower().strip())
 
-def extract_keywords(text: str) -> set:
+def stem(word: str) -> str:
+    """Lightweight suffix-stripping stemmer to normalize word forms
+    (e.g. 'developing'/'developed'/'develops' -> 'develop',
+    'systems' -> 'system', 'technologies' -> 'technology')."""
+    if len(word) <= 4:
+        return word
+    if word.endswith("ies"):
+        return word[:-3] + "y"
+    if word.endswith("ied"):
+        return word[:-3] + "y"
+    if word.endswith("ing"):
+        s = word[:-3]
+        if len(s) > 2 and s[-1] == s[-2] and s[-1] not in "aeiou":
+            s = s[:-1]
+        return s
+    if word.endswith("ed") and not word.endswith("eed"):
+        s = word[:-2]
+        if len(s) > 2 and s[-1] == s[-2] and s[-1] not in "aeiou":
+            s = s[:-1]
+        return s
+    if word.endswith("es") and not word.endswith("ses"):
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss") and not word.endswith("us"):
+        return word[:-1]
+    return word
+
+def _build_tech_skill_stems() -> set:
+    """Stemmed tokens from every word in TECH_SKILLS, so phrases like
+    'machine learning' exclude 'machine' and 'learning' from role keywords."""
+    stems = set()
+    for skill in TECH_SKILLS:
+        for word in re.split(r"[^a-z0-9]+", skill):
+            if word:
+                stems.add(stem(word))
+    return stems
+
+TECH_SKILL_STEMS = _build_tech_skill_stems()
+
+def extract_tech_skills(text: str) -> set:
+    """Extract only recognized tech skills from text."""
     text_lower = normalize(text)
     found = set()
 
-    # Known multi-word skills
-    for skill in KNOWN_SKILLS:
-        if skill in text_lower:
+    # Match known multi-word and single-word tech skills
+    for skill in TECH_SKILLS:
+        # Use word boundary matching
+        pattern = r'\b' + re.escape(skill) + r'\b'
+        if re.search(pattern, text_lower):
             found.add(skill)
-
-    # Clean text for unigrams/bigrams
-    clean = re.sub(r"[^\w\s]", " ", text_lower)
-    tokens = [w for w in clean.split() if w not in STOPWORDS and len(w) > 2]
-
-    found.update(tokens)
-
-    # Bigrams
-    for i in range(len(tokens) - 1):
-        bigram = f"{tokens[i]} {tokens[i+1]}"
-        if len(bigram) > 6:
-            found.add(bigram)
 
     return found
 
+def extract_role_keywords(text: str) -> dict:
+    """Extract meaningful role/domain keywords — not stopwords, not filler,
+    not part of a tech-skill phrase, not single chars. Words are stemmed so
+    different tenses/plurals (e.g. 'developing' vs 'developed') count as the
+    same keyword. Returns {stem: representative_original_word}."""
+    text_lower = normalize(text)
+    clean = re.sub(r"[^\w\s]", " ", text_lower)
+    tokens = clean.split()
+
+    keywords: dict = {}
+    for token in tokens:
+        if (
+            token in STOPWORDS
+            or token in FILLER_WORDS
+            or len(token) <= 3
+            or token.isdigit()
+        ):
+            continue
+        s = stem(token)
+        if s in TECH_SKILL_STEMS:
+            continue
+        if s not in keywords:
+            keywords[s] = token
+
+    return keywords
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     import fitz
@@ -113,50 +205,154 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         text += page.get_text()
     return text
 
-
 def extract_text_from_docx(file_bytes: bytes) -> str:
     from docx import Document
     doc = Document(io.BytesIO(file_bytes))
     return "\n".join([para.text for para in doc.paragraphs])
 
+# ─── Scorers ─────────────────────────────────────────────────────────────────
 
-# ─── Sub-scorers ──────────────────────────────────────────────────────────────
+def score_tech_skills(resume: str, jd: str) -> dict:
+    """Match actual tech skills between resume and JD."""
+    resume_skills = extract_tech_skills(resume)
+    jd_skills = extract_tech_skills(jd)
 
-def score_keywords(resume: str, jd: str) -> dict:
-    resume_kw = extract_keywords(resume)
-    jd_kw = extract_keywords(jd)
+    if not jd_skills:
+        return {
+            "score": 50,
+            "matched": [],
+            "missing": [],
+            "jd_total": 0,
+            "matched_total": 0,
+        }
 
-    matched = resume_kw & jd_kw
-    missing = jd_kw - resume_kw
+    matched = resume_skills & jd_skills
+    missing = jd_skills - resume_skills
 
-    # Filter missing to meaningful ones
-    top_missing_phrases = sorted(
-        [k for k in missing if " " in k],
-        key=len, reverse=True
-    )[:10]
-    top_missing_words = sorted(
-        [k for k in missing if " " not in k and len(k) > 3],
-        key=len, reverse=True
-    )[:10]
-    top_missing = (top_missing_phrases + top_missing_words)[:15]
-
-    top_matched = sorted(
-        [k for k in matched if len(k) > 3],
-        key=len, reverse=True
-    )[:20]
-
-    score = round((len(matched) / len(jd_kw)) * 100) if jd_kw else 0
+    score = round((len(matched) / len(jd_skills)) * 100)
     score = min(score, 100)
 
     return {
         "score": score,
-        "matched_keywords": top_matched,
-        "missing_keywords": top_missing,
-        "skill_gaps": top_missing_phrases[:8],
-        "total_jd_keywords": len(jd_kw),
-        "total_matched": len(matched),
+        "matched": sorted(matched),
+        "missing": sorted(missing),
+        "jd_total": len(jd_skills),
+        "matched_total": len(matched),
     }
 
+def score_role_keywords(resume: str, jd: str) -> dict:
+    """Match domain/role keywords (non-tech but meaningful), using stemming
+    to normalize word forms so e.g. 'developing' in the JD matches
+    'developed' in the resume."""
+    resume_kw = extract_role_keywords(resume)
+    jd_kw = extract_role_keywords(jd)
+
+    if not jd_kw:
+        return {"score": 50, "matched": [], "missing": []}
+
+    resume_stems = set(resume_kw.keys())
+    jd_stems = set(jd_kw.keys())
+
+    matched_stems = resume_stems & jd_stems
+    missing_stems = jd_stems - resume_stems
+
+    score = round((len(matched_stems) / len(jd_stems)) * 100)
+    score = min(score, 100)
+
+    # Display using the JD's own wording
+    top_matched = sorted(
+        (jd_kw[s] for s in matched_stems if len(jd_kw[s]) > 4),
+        key=len, reverse=True
+    )[:10]
+    top_missing = sorted(
+        (jd_kw[s] for s in missing_stems if len(jd_kw[s]) > 4),
+        key=len, reverse=True
+    )[:10]
+
+    return {
+        "score": score,
+        "matched": top_matched,
+        "missing": top_missing,
+    }
+
+def score_resume_quality(resume: str) -> dict:
+    """Score resume content quality."""
+    issues = []
+    strengths = []
+
+    words = resume.split()
+    word_count = len(words)
+
+    if word_count < 200:
+        issues.append("Resume is too short — add more detail to experience and projects")
+    elif word_count > 900:
+        issues.append("Resume may be too long — aim for 1 page (under 800 words)")
+    else:
+        strengths.append(f"Good length ({word_count} words)")
+
+    numbers = re.findall(r"\b\d+[%$x]?\b", resume)
+    meaningful = [n for n in numbers if n not in {"0", "1", "2", "3"} and len(n) > 1]
+    if len(meaningful) >= 4:
+        strengths.append(f"Strong use of metrics ({len(meaningful)} data points)")
+    elif len(meaningful) >= 1:
+        issues.append("Add more quantifiable results (%, $, x improvement)")
+    else:
+        issues.append("No metrics found — add numbers to show impact (e.g. 'reduced latency by 40%')")
+
+    resume_lower = resume.lower()
+    found_verbs = [v for v in STRONG_ACTION_VERBS if v in resume_lower]
+    if len(found_verbs) >= 6:
+        strengths.append(f"Strong action verbs ({len(found_verbs)} found)")
+    elif len(found_verbs) >= 3:
+        issues.append("Use more strong action verbs (built, optimized, led, scaled…)")
+    else:
+        issues.append("Weak language — start bullets with action verbs (built, deployed, engineered…)")
+
+    found_weak = [p for p in WEAK_PHRASES if p in resume_lower]
+    if found_weak:
+        issues.append(f"Weak phrase found: \"{found_weak[0]}\" — replace with action verb")
+
+    score_parts = []
+    score_parts.append(40 if 200 <= word_count <= 900 else 10)
+    score_parts.append(35 if len(meaningful) >= 4 else (20 if len(meaningful) >= 1 else 0))
+    score_parts.append(25 if len(found_verbs) >= 6 else (15 if len(found_verbs) >= 3 else 0))
+    score = sum(score_parts)
+
+    return {
+        "score": score,
+        "word_count": word_count,
+        "strengths": strengths,
+        "issues": issues,
+        "metrics_count": len(meaningful),
+        "action_verbs_count": len(found_verbs),
+    }
+
+def score_ats_essentials(resume: str) -> dict:
+    resume_lower = resume.lower()
+    checks = []
+
+    has_email = bool(re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", resume))
+    checks.append({"label": "Email address", "pass": has_email})
+
+    has_phone = bool(re.search(r"[\+\(]?[\d\s\-\(\)]{7,15}", resume))
+    checks.append({"label": "Phone number", "pass": has_phone})
+
+    has_linkedin = "linkedin" in resume_lower
+    checks.append({"label": "LinkedIn profile", "pass": has_linkedin})
+
+    has_github = "github" in resume_lower
+    checks.append({"label": "GitHub profile", "pass": has_github})
+
+    pipe_count = resume.count("|")
+    checks.append({"label": "ATS-safe formatting (no complex tables)", "pass": pipe_count <= 5})
+
+    special = len(re.findall(r"[★●■▶◆]", resume))
+    checks.append({"label": "No special characters that confuse ATS", "pass": special == 0})
+
+    passed = sum(1 for c in checks if c["pass"])
+    score = round((passed / len(checks)) * 100)
+
+    return {"score": score, "checks": checks}
 
 def score_sections(resume: str) -> dict:
     resume_lower = resume.lower()
@@ -170,152 +366,54 @@ def score_sections(resume: str) -> dict:
             missing.append(section_name)
 
     score = round((len(found) / len(REQUIRED_SECTIONS)) * 100)
-    return {
-        "score": score,
-        "found_sections": found,
-        "missing_sections": missing,
-    }
+    return {"score": score, "found": found, "missing": missing}
 
-
-def score_content(resume: str) -> dict:
-    issues = []
-    strengths = []
-
-    # Word count
-    words = resume.split()
-    word_count = len(words)
-    if word_count < 200:
-        issues.append("Resume is too short (under 200 words) — add more detail")
-    elif word_count > 800:
-        issues.append("Resume may be too long (over 800 words) — consider trimming")
-    else:
-        strengths.append(f"Good length ({word_count} words)")
-
-    # Numbers/quantification
-    numbers = re.findall(r"\b\d+[%$]?\b|\b[%$]\d+", resume)
-    meaningful_numbers = [n for n in numbers if n not in {"1", "2", "3", "0"}]
-    if len(meaningful_numbers) >= 3:
-        strengths.append(f"Good use of metrics ({len(meaningful_numbers)} numbers found)")
-    elif len(meaningful_numbers) == 1 or len(meaningful_numbers) == 2:
-        issues.append("Add more quantifiable achievements (use numbers, %, $ values)")
-    else:
-        issues.append("No quantifiable metrics found — add numbers to show impact (e.g. 'reduced load time by 40%')")
-
-    # Action verbs
-    resume_lower = resume.lower()
-    found_verbs = [v for v in STRONG_ACTION_VERBS if v in resume_lower]
-    if len(found_verbs) >= 5:
-        strengths.append(f"Strong action verbs used ({len(found_verbs)} found)")
-    elif len(found_verbs) >= 2:
-        issues.append("Use more strong action verbs (built, optimized, led, scaled…)")
-    else:
-        issues.append("Weak language detected — start bullet points with strong verbs (achieved, built, deployed, led…)")
-
-    # Weak phrases
-    found_weak = [p for p in WEAK_PHRASES if p in resume_lower]
-    if found_weak:
-        issues.append(f"Weak phrases found: \"{found_weak[0]}\" — replace with action verbs")
-
-    score_parts = []
-    score_parts.append(50 if 200 <= word_count <= 800 else (20 if word_count > 0 else 0))
-    score_parts.append(30 if len(meaningful_numbers) >= 3 else (15 if len(meaningful_numbers) >= 1 else 0))
-    score_parts.append(20 if len(found_verbs) >= 5 else (10 if len(found_verbs) >= 2 else 0))
-    score = sum(score_parts)
-
-    return {
-        "score": score,
-        "word_count": word_count,
-        "strengths": strengths,
-        "issues": issues,
-        "metrics_count": len(meaningful_numbers),
-        "action_verbs_found": len(found_verbs),
-    }
-
-
-def score_ats_essentials(resume: str) -> dict:
-    resume_lower = resume.lower()
-    checks = []
-
-    # Email
-    has_email = bool(re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", resume))
-    checks.append({"label": "Email address", "pass": has_email})
-
-    # Phone
-    has_phone = bool(re.search(r"[\+\(]?[\d\s\-\(\)]{7,15}", resume))
-    checks.append({"label": "Phone number", "pass": has_phone})
-
-    # LinkedIn
-    has_linkedin = "linkedin" in resume_lower
-    checks.append({"label": "LinkedIn profile", "pass": has_linkedin})
-
-    # GitHub (for tech roles)
-    has_github = "github" in resume_lower
-    checks.append({"label": "GitHub profile", "pass": has_github})
-
-    # No tables/columns warning (heuristic: if lots of | characters)
-    pipe_count = resume.count("|")
-    has_tables = pipe_count > 5
-    checks.append({"label": "No complex tables (ATS-safe formatting)", "pass": not has_tables})
-
-    # No special characters overuse
-    special = len(re.findall(r"[★●■▶◆]", resume))
-    checks.append({"label": "No special characters that confuse ATS", "pass": special == 0})
-
-    passed = sum(1 for c in checks if c["pass"])
-    score = round((passed / len(checks)) * 100)
-
-    return {
-        "score": score,
-        "checks": checks,
-    }
-
-
-def overall_score(kw_score: int, section_score: int, content_score: int, ats_score: int) -> int:
-    return round(
-        kw_score * 0.40 +
-        section_score * 0.20 +
-        content_score * 0.25 +
-        ats_score * 0.15
-    )
-
+def overall_score(tech: int, role: int, quality: int, ats: int) -> int:
+    return round(tech * 0.45 + role * 0.25 + quality * 0.20 + ats * 0.10)
 
 def run_analysis(resume_text: str, jd_text: str) -> dict:
-    kw = score_keywords(resume_text, jd_text)
-    sections = score_sections(resume_text)
-    content = score_content(resume_text)
+    tech = score_tech_skills(resume_text, jd_text)
+    role = score_role_keywords(resume_text, jd_text)
+    quality = score_resume_quality(resume_text)
     ats = score_ats_essentials(resume_text)
+    sections = score_sections(resume_text)
 
-    total = overall_score(kw["score"], sections["score"], content["score"], ats["score"])
+    total = overall_score(tech["score"], role["score"], quality["score"], ats["score"])
 
     return {
         "overall_score": total,
         "breakdown": {
-            "keyword_match": kw["score"],
-            "sections": sections["score"],
-            "content_quality": content["score"],
+            "tech_skills_match": tech["score"],
+            "role_keywords": role["score"],
+            "resume_quality": quality["score"],
             "ats_essentials": ats["score"],
         },
-        "keywords": {
-            "matched": kw["matched_keywords"],
-            "missing": kw["missing_keywords"],
-            "skill_gaps": kw["skill_gaps"],
-            "total_jd": kw["total_jd_keywords"],
-            "total_matched": kw["total_matched"],
+        "tech_skills": {
+            "matched": tech["matched"],
+            "missing": tech["missing"],
+            "jd_total": tech["jd_total"],
+            "matched_total": tech["matched_total"],
         },
-        "sections": sections,
-        "content": content,
+        "role_keywords": {
+            "matched": role["matched"],
+            "missing": role["missing"],
+        },
+        "quality": quality,
         "ats": ats,
+        "sections": sections,
     }
 
+# ─── Routes ──────────────────────────────────────────────────────────────────
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
+class AnalyzeRequest(BaseModel):
+    resume_text: str
+    job_description: str
 
 @router.post("/analyze-text")
 def analyze_text(request: AnalyzeRequest):
     if not request.resume_text.strip() or not request.job_description.strip():
         raise HTTPException(status_code=400, detail="Both resume and job description are required")
     return run_analysis(request.resume_text, request.job_description)
-
 
 @router.post("/analyze-file")
 async def analyze_file(
@@ -333,12 +431,28 @@ async def analyze_file(
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
 
     if not resume_text.strip():
-        raise HTTPException(status_code=400, detail="Could not extract text from the file")
+        raise HTTPException(status_code=400, detail="Could not extract text from file")
 
     return run_analysis(resume_text, job_description)
 
+@router.post("/extract-text")
+async def extract_text_endpoint(file: UploadFile = File(...)):
+    file_bytes = await file.read()
+    filename = file.filename or ""
 
-# Keep old endpoint for backward compat
+    if filename.endswith(".pdf"):
+        text = extract_text_from_pdf(file_bytes)
+    elif filename.endswith(".docx"):
+        text = extract_text_from_docx(file_bytes)
+    else:
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
+
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Could not extract text from file")
+
+    return {"text": text}
+
+# Backward compat
 @router.post("/analyze")
 def analyze_legacy(request: AnalyzeRequest):
     return run_analysis(request.resume_text, request.job_description)

@@ -9,8 +9,7 @@ from jose import jwt
 
 router = APIRouter()
 
-SECRET_KEY = "resumex-secret-key"
-ALGORITHM = "HS256"
+from app.config import SECRET_KEY
 
 def get_user_id(token: str) -> int:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -97,7 +96,7 @@ def generate_resume(request: GenerateRequest, token: str, db: Session = Depends(
                 "technologies": p.get("technologies") or "",
                 "link": ""
             }
-            for p in ranked["projects"]
+            for p in ranked["projects"][:3]
         ],
         "skills": {
             "technical": skill_groups.get("languages", []),
@@ -126,16 +125,17 @@ def generate_resume(request: GenerateRequest, token: str, db: Session = Depends(
     }
 
     return {
-        "resume_content": resume_content,
-        "template": request.template,
-        "ranking_info": {
-            "projects_selected": len(ranked["projects"]),
-            "experience_selected": len(ranked["experience"]),
-            "certifications_selected": len(ranked["certifications"]),
-            "achievements_selected": len(ranked["achievements"]),
-            "skills_selected": len(ranked["skills"])
-        }
+    "resume_content": resume_content,
+    "template": request.template,
+    "all_ranked_projects": ranked["projects"],
+    "ranking_info": {
+        "projects_selected": min(len(ranked["projects"]), 3),
+        "experience_selected": len(ranked["experience"]),
+        "certifications_selected": len(ranked["certifications"]),
+        "achievements_selected": len(ranked["achievements"]),
+        "skills_selected": len(ranked["skills"])
     }
+}
 
 @router.get("/status")
 def get_kb_status(token: str, db: Session = Depends(get_db)):
